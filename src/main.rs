@@ -19,12 +19,24 @@ fn main() {
 
     let screen: Screen = Screen::create_screen(&camera, WIDTH as u32, HEIGHT as u32);
 
-    let scene = Scene {
-        sphere: Sphere {
-            origin: Vector3::new(0.0, 0.0, 5.0),
-            radius2: 3.0,
-            color: Color::red(),
-        }
+    let scene: Scene = Scene {
+        primitives: vec![
+            Box::new(
+                Sphere {
+                    origin: Vector3::new(0.0, 0.0, 5.0),
+                    radius2: 3.0,
+                    color: Color::red(),
+                }
+            ),
+    
+            Box::new(
+                Sphere {
+                    origin: Vector3::new(2.0, 0.0, 4.0),
+                    radius2: 3.0,
+                    color: Color::blue(),
+                }
+            ),
+        ],
     };
 
     let mut ray = Ray::initial();
@@ -40,21 +52,27 @@ fn main() {
     window.limit_update_rate(Some(std::time::Duration::from_micros(16600)));
 
     while window.is_open() && !window.is_key_down(Key::Escape) {
+        let now = std::time::Instant::now();
+
         for y in 0..HEIGHT {
             for x in 0..WIDTH {
                 ray.update(x, y, &camera, &screen);
                 let mut color = Color::black();
 
-                let (intersected, _distance) = scene.sphere.intersect(&ray);
-                
-                if intersected {
-                    color += scene.sphere.color;
+                let intersection = scene.get_nearest_intersection(&ray);
+                if let Some((primitive, distance)) = intersection {
+                    color += primitive.get_color();
                 }
 
                 let index = x + y * WIDTH;
                 buffer[index] = color.to_u32();
             }
         }
+
+        let elapsed = now.elapsed().as_millis();
+        let fps = 1.0 / (elapsed as f64 / 1000.0);
+
+        println!("{} fps", fps.round());
 
         window
             .update_with_buffer(&buffer, WIDTH, HEIGHT)

@@ -1,4 +1,4 @@
-use std::{ops::Add, ops::AddAssign};
+use std::{ops::Add, ops::{AddAssign, Deref}};
 
 use nalgebra::{Unit, Vector3, clamp};
 
@@ -32,6 +32,14 @@ impl Color {
             blue: 0.0,
         };
     }
+
+    pub fn blue() -> Color {
+        return Color {
+            red: 0.0,
+            green: 0.0,
+            blue: 1.0,
+        };
+    }
 }
 
 impl Add for Color {
@@ -56,24 +64,29 @@ impl AddAssign for Color {
     }
 }
 
+pub trait Primitive {
+    fn intersect(&self, ray: &Ray) -> Option<f64>;
+    fn get_color(&self) -> Color;
+}
+
 pub struct Sphere {
     pub origin: Vector3<f64>,
     pub radius2: f64,
     pub color: Color,
 }
 
-impl Sphere {
-    pub fn intersect(self: &Self, ray: &Ray) -> (bool, f64) {
+impl Primitive for Sphere {
+    fn intersect(self: &Self, ray: &Ray) -> Option<f64> {
         let mut t0: f64; let mut t1: f64;
 
         let l: Vector3<f64> = self.origin - ray.origin;
         let tca = l.dot(&ray.direction);
 
-        if tca < 0.0 { return (false, 0.0); }
+        if tca < 0.0 { return None; }
         
         let d2 = l.dot(&l) - tca * tca;
         
-        if d2 > self.radius2 { return (false, 0.0); }
+        if d2 > self.radius2 { return None; }
         
         let thc = (self.radius2 - d2).sqrt();
         t0 = tca - thc;
@@ -83,15 +96,42 @@ impl Sphere {
 
         if t0 < 0.0 {
             t0 = t1;
-            if t0 < 0.0 { return (false, 0.0); }
+            if t0 < 0.0 { return None; }
         }
 
-        return (true, t0);
+        return Some(t0);
+    }
+
+    fn get_color(&self) -> Color {
+        return self.color;
     }
 }
 
 pub struct Scene {
-    pub sphere: Sphere,
+    pub primitives: Vec<Box<dyn Primitive>>,
+}
+
+impl Scene {
+    pub fn get_nearest_intersection(&self, ray: &Ray) -> Option<(&Box<dyn Primitive>, f64)> {
+        let mut nearest_intersection: Option<(&Box<dyn Primitive>, f64)> = None;
+        
+        for primitive in &self.primitives {
+            let intersection = primitive.intersect(&ray);
+            if let Some(distance) = intersection {
+                match nearest_intersection {
+                    None => nearest_intersection = Some((primitive, distance)),
+                    Some((_, nearest_distance)) => {
+                        if distance < nearest_distance {
+                            nearest_intersection = Some((primitive, distance));
+                        }
+                    }
+                }
+            }
+
+        }
+
+        return nearest_intersection;
+    }
 }
 
 pub struct Camera {
