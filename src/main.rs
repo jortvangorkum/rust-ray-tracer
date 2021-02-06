@@ -12,22 +12,22 @@ fn main() {
 
     let camera: Camera = Camera {
         origin: Vector3::new(0.0, 0.0, 0.0),
-        direction: Vector3::new(0.0, 0.0, 1.0),
+        forward: Vector3::new(0.0, 0.0, 1.0),
+        up: Vector3::new(0.0, 1.0, 0.0),
+        fov: 90.0,
     };
 
-    let screen: Screen = Screen::create_screen(&camera, WIDTH as u32, HEIGHT as u32, 90.0);
+    let screen: Screen = Screen::create_screen(&camera, WIDTH as u32, HEIGHT as u32);
 
     let scene = Scene {
         sphere: Sphere {
             origin: Vector3::new(0.0, 0.0, 5.0),
             radius2: 3.0,
-            color: Color {
-                red: 1.0,
-                green: 0.0,
-                blue: 0.0,
-            }
+            color: Color::red(),
         }
     };
+
+    let mut ray = Ray::initial();
 
     let mut window = Window::new(
         "Test - ESC to exit",
@@ -42,7 +42,7 @@ fn main() {
     while window.is_open() && !window.is_key_down(Key::Escape) {
         for y in 0..HEIGHT {
             for x in 0..WIDTH {
-                let ray = Ray::create_prime(x, y, &camera, &screen);
+                ray.update(x, y, &camera, &screen);
                 let mut color = Color::black();
 
                 let (intersected, _distance) = scene.sphere.intersect(&ray);
