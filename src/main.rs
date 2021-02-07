@@ -1,5 +1,5 @@
-mod data_types;
-use data_types::{Camera, Color, Ray, Scene, Screen, Sphere};
+mod engine_objects;
+use engine_objects::{Camera, Color, Ray, Scene, Screen, primitives::Sphere};
 
 use minifb::{Key, Window, WindowOptions};
 use nalgebra::Vector3;
@@ -39,10 +39,10 @@ fn main() {
         ],
     };
 
-    let mut ray = Ray::initial();
+    let mut prim_ray = Ray::initial();
 
     let mut window = Window::new(
-        "Test - ESC to exit",
+        "Rust Ray Tracer - Jort van Gorkum",
         WIDTH,
         HEIGHT,
         WindowOptions::default(),
@@ -56,10 +56,10 @@ fn main() {
 
         for y in 0..HEIGHT {
             for x in 0..WIDTH {
-                ray.update(x, y, &camera, &screen);
+                prim_ray.update(x, y, &camera, &screen);
                 let mut color = Color::black();
 
-                let intersection = scene.get_nearest_intersection(&ray);
+                let intersection = scene.get_nearest_intersection(&prim_ray);
                 if let Some((primitive, distance)) = intersection {
                     color += primitive.get_color();
                 }
@@ -70,9 +70,7 @@ fn main() {
         }
 
         let elapsed = now.elapsed().as_millis();
-        let fps = 1.0 / (elapsed as f64 / 1000.0);
-
-        println!("{} fps", fps.round());
+        println!("{}ms", elapsed);
 
         window
             .update_with_buffer(&buffer, WIDTH, HEIGHT)
