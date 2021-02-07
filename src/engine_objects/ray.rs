@@ -1,5 +1,7 @@
 use nalgebra::{Unit, Vector3};
 
+use crate::EPSILON;
+
 use super::{Scene, camera::Camera, Color, lights::PointLight, screen::Screen};
 
 pub struct Ray {
@@ -8,7 +10,7 @@ pub struct Ray {
 }
 
 impl Ray {
-    pub fn initial() -> Ray {
+    pub fn init() -> Ray {
         return Ray {
             origin: Vector3::zeros(),
             direction: Unit::new_normalize(Vector3::zeros()),
@@ -42,19 +44,24 @@ impl Ray {
         
         if let Some((primitive, distance)) = intersection {
             let intersection_point: Vector3<f64> = self.get_intersection_point(distance);
+            let mut color = Color::black();
             for light in scene.lights.iter() {
-                let light_vector: Vector3<f64> = light.origin - intersection_point.add_scalar(-std::f64::EPSILON);
-                let distance = light_vector.magnitude();
-                let direction = Unit::new_normalize(light.origin - intersection_point);
-                let origin = intersection_point + (direction.scale(std::f64::EPSILON));
-                
+                let light_vector: Vector3<f64>    = light.origin - intersection_point;
+                let distance: f64                 = light_vector.magnitude() - (light_vector.magnitude() * EPSILON);
+                let direction: Unit<Vector3<f64>> = Unit::new_normalize(light.origin - intersection_point);
+                let origin: Vector3<f64>          = intersection_point + (direction.scale( EPSILON));
+
                 shadow_ray.update_shadow(origin, direction);
 
                 if !PointLight::occluded(&scene, shadow_ray, distance) {
-                    let normal = primitive.get_normal(intersection_point);
-                    return primitive.get_color() * (1.0 / (distance * distance)) * light.intensity * (normal.dot(&direction));
+                    let normal = primitive.get_normal(&intersection_point);
+                    let prim_color = primitive.get_color();
+                    let dist_falloff = 1.0 / (distance * distance);
+                    let angle_falloff = normal.dot(&direction);
+                    color += prim_color * dist_falloff * angle_falloff * light.intensity;
                 }
             }
+            return color;
         }
 
         return Color::black();

@@ -2,7 +2,7 @@ use std::ops::{Add, Mul, AddAssign};
 
 use nalgebra::clamp;
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub struct Color {
     pub red: f64,
     pub green: f64,

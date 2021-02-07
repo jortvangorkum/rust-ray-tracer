@@ -1,11 +1,12 @@
 mod engine_objects;
-use engine_objects::{Camera, Color, Ray, Scene, Screen, lights::PointLight, primitives::Sphere};
+use engine_objects::{Camera, Color, Ray, Scene, Screen, lights::PointLight, primitives::{Sphere, Triangle}};
 
 use minifb::{Key, Window, WindowOptions};
-use nalgebra::{Unit, Vector3};
+use nalgebra::Vector3;
 
 const WIDTH: usize = 1600;
 const HEIGHT: usize = 900;
+pub static EPSILON: f64 = 0.0001;
 
 fn main() {
     let mut buffer: Vec<u32> = vec![0; WIDTH * HEIGHT];
@@ -22,37 +23,46 @@ fn main() {
     let scene: Scene = Scene {
         lights: vec![
             PointLight {
-                origin: Vector3::new(0.0, 2.0, 0.0),
-                intensity: 15.0,
+                origin: Vector3::new(0.0, 0.0, 0.0),
+                intensity: 30.0,
             },
         ],
         primitives: vec![
             Box::new(
                 Sphere {
-                    origin: Vector3::new(0.0, 0.0, 5.0),
+                    origin: Vector3::new(0.0, 0.0, 10.0),
                     radius2: 3.0,
                     color: Color::red(),
                 }
             ),
             Box::new(
                 Sphere {
-                    origin: Vector3::new(2.0, 0.0, 4.0),
+                    origin: Vector3::new(2.0, 0.0, 10.0),
                     radius2: 3.0,
                     color: Color::blue(),
                 }
             ),
             Box::new(
                 Sphere {
-                    origin: Vector3::new(0.0, 2.0, 4.0),
+                    origin: Vector3::new(0.0, 2.0, 10.0),
                     radius2: 3.0,
                     color: Color::green(),
                 }
             ),
+            Box::new(
+                Triangle::create_triangle(
+                    Vector3::new(0.0, -2.0, 5.0), 
+                    Vector3::new(2.0, 0.0, 5.0), 
+                    Vector3::new(0.0, 2.0, 5.0),
+                    true, 
+                    Color::green(),
+                )
+            )
         ],
     };
 
-    let mut prim_ray = Ray::initial();
-    let mut shadow_ray = Ray::initial();
+    let mut prim_ray = Ray::init();
+    let mut shadow_ray = Ray::init();
 
     let mut window = Window::new(
         "Rust Ray Tracer - Jort van Gorkum",

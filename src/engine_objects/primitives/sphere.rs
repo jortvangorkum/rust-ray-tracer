@@ -41,7 +41,7 @@ impl Primitive for Sphere {
         return self.color;
     }
 
-    fn get_normal(&self, intersection_point: Vector3<f64>) -> Unit<Vector3<f64>> {
+    fn get_normal(&self, intersection_point: &Vector3<f64>) -> Unit<Vector3<f64>> {
         return Unit::new_normalize(intersection_point - self.origin);
     }
 }
