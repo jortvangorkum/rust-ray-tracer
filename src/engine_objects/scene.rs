@@ -1,7 +1,8 @@
-use super::{primitives::Primitive, ray::Ray};
+use super::{primitives::Primitive, ray::Ray, lights::PointLight};
 
 pub struct Scene {
     pub primitives: Vec<Box<dyn Primitive>>,
+    pub lights: Vec<PointLight>,
 }
 
 impl Scene {

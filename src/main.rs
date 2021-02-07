@@ -1,8 +1,8 @@
 mod engine_objects;
-use engine_objects::{Camera, Color, Ray, Scene, Screen, primitives::Sphere};
+use engine_objects::{Camera, Color, Ray, Scene, Screen, lights::PointLight, primitives::Sphere};
 
 use minifb::{Key, Window, WindowOptions};
-use nalgebra::Vector3;
+use nalgebra::{Unit, Vector3};
 
 const WIDTH: usize = 1600;
 const HEIGHT: usize = 900;
@@ -20,6 +20,12 @@ fn main() {
     let mut screen: Screen = Screen::create_screen(&camera, WIDTH as u32, HEIGHT as u32);
 
     let scene: Scene = Scene {
+        lights: vec![
+            PointLight {
+                origin: Vector3::new(0.0, 2.0, 0.0),
+                intensity: 15.0,
+            },
+        ],
         primitives: vec![
             Box::new(
                 Sphere {
@@ -28,7 +34,6 @@ fn main() {
                     color: Color::red(),
                 }
             ),
-    
             Box::new(
                 Sphere {
                     origin: Vector3::new(2.0, 0.0, 4.0),
@@ -36,7 +41,6 @@ fn main() {
                     color: Color::blue(),
                 }
             ),
-
             Box::new(
                 Sphere {
                     origin: Vector3::new(0.0, 2.0, 4.0),
@@ -48,6 +52,7 @@ fn main() {
     };
 
     let mut prim_ray = Ray::initial();
+    let mut shadow_ray = Ray::initial();
 
     let mut window = Window::new(
         "Rust Ray Tracer - Jort van Gorkum",
@@ -64,12 +69,24 @@ fn main() {
 
         for y in 0..HEIGHT {
             for x in 0..WIDTH {
-                prim_ray.update(x, y, &camera, &screen);
+                prim_ray.update_prim(x, y, &camera, &screen);
                 let mut color = Color::black();
 
                 let intersection = scene.get_nearest_intersection(&prim_ray);
                 if let Some((primitive, distance)) = intersection {
-                    color += primitive.get_color();
+                    let intersection_point: Vector3<f64> = prim_ray.get_intersection_point(distance);
+                    for light in scene.lights.iter() {
+                        let light_vector: Vector3<f64> = light.origin - intersection_point.add_scalar(-std::f64::EPSILON);
+                        let distance = light_vector.magnitude();
+                        let direction = Unit::new_normalize(light.origin - intersection_point);
+                        let origin = intersection_point + (direction.scale(std::f64::EPSILON));
+                        shadow_ray.update_shadow(origin, direction);
+
+                        if !PointLight::occluded(&scene, &shadow_ray, distance) {
+                            let normal = primitive.get_normal(intersection_point);
+                            color += primitive.get_color() * (1.0 / (distance * distance)) * light.intensity * (normal.dot(&direction));
+                        }
+                    }
                 }
 
                 let index = x + y * WIDTH;

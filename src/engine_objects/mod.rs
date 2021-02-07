@@ -9,3 +9,4 @@ pub use scene::*;
 mod screen;
 pub use screen::*;
 pub mod primitives;
+pub mod lights;

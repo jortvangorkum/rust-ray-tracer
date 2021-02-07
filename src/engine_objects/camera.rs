@@ -10,20 +10,23 @@ pub struct Camera {
 
 impl Camera {
     pub fn update_input(self: &mut Self, window: &Window) {
+        // Movement speed
+        let speed = if window.is_key_down(Key::LeftShift) { 0.30 } else { 0.15 };
+
         // Translation
-        if window.is_key_down(Key::D) { self.translate_x(0.15); }
-        if window.is_key_down(Key::A) { self.translate_x(-0.15); }
-        if window.is_key_down(Key::R) { self.translate_y(0.15); }
-        if window.is_key_down(Key::F) { self.translate_y(-0.15); }
-        if window.is_key_down(Key::W) { self.translate_z(0.15); }
-        if window.is_key_down(Key::S) { self.translate_z(-0.15); }
+        if window.is_key_down(Key::D) { self.translate_x(speed); }
+        if window.is_key_down(Key::A) { self.translate_x(-speed); }
+        if window.is_key_down(Key::R) { self.translate_y(speed); }
+        if window.is_key_down(Key::F) { self.translate_y(-speed); }
+        if window.is_key_down(Key::W) { self.translate_z(speed); }
+        if window.is_key_down(Key::S) { self.translate_z(-speed); }
         // Rotation
-        if window.is_key_down(Key::Up)    { self.rotate_x(0.15); }
-        if window.is_key_down(Key::Down)  { self.rotate_x(-0.15); }
-        if window.is_key_down(Key::Right) { self.rotate_y(0.15); }
-        if window.is_key_down(Key::Left)  { self.rotate_y(-0.15); }
-        if window.is_key_down(Key::E)     { self.rotate_z(0.15); }
-        if window.is_key_down(Key::Q)     { self.rotate_z(-0.15); }
+        if window.is_key_down(Key::Up)    { self.rotate_x(speed); }
+        if window.is_key_down(Key::Down)  { self.rotate_x(-speed); }
+        if window.is_key_down(Key::Right) { self.rotate_y(speed); }
+        if window.is_key_down(Key::Left)  { self.rotate_y(-speed); }
+        if window.is_key_down(Key::E)     { self.rotate_z(speed); }
+        if window.is_key_down(Key::Q)     { self.rotate_z(-speed); }
     }
 
     fn translate_x(self: &mut Self, dist: f64) {

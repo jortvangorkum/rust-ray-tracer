@@ -1,4 +1,4 @@
-use std::ops::{Add, AddAssign};
+use std::ops::{Add, Mul, AddAssign};
 
 use nalgebra::clamp;
 
@@ -47,6 +47,18 @@ impl Color {
             green: 1.0,
             blue: 0.0,
         };
+    }
+}
+
+impl Mul<f64> for Color {
+    type Output = Color;
+
+    fn mul(self, other: f64) -> Color {
+        Color {
+            red: self.red * other,
+            green: self.green * other,
+            blue: self.blue * other,
+        }
     }
 }
 

@@ -15,7 +15,16 @@ impl Ray {
         };
     }
 
-    pub fn update(&mut self, x: usize, y: usize, camera: &Camera, screen: &Screen) {
+    pub fn get_intersection_point(self: &Self, dist: f64) -> Vector3<f64> {
+        return self.origin + self.direction.scale(dist);
+    }
+
+    pub fn update_shadow(self: &mut Self, origin: Vector3<f64>, direction: Unit<Vector3<f64>>) {
+        self.origin    = origin;
+        self.direction = direction;
+    }
+
+    pub fn update_prim(&mut self, x: usize, y: usize, camera: &Camera, screen: &Screen) {
         let w: f64 = screen.width as f64;
         let h: f64 = screen.height as f64;
         let u: f64 = (x as f64) / w;

@@ -1,4 +1,4 @@
-use nalgebra::Vector3;
+use nalgebra::{Unit, Vector3};
 
 use crate::engine_objects::{color::Color, ray::Ray};
 
@@ -39,5 +39,9 @@ impl Primitive for Sphere {
 
     fn get_color(&self) -> Color {
         return self.color;
+    }
+
+    fn get_normal(&self, intersection_point: Vector3<f64>) -> Unit<Vector3<f64>> {
+        return Unit::new_normalize(intersection_point - self.origin);
     }
 }
