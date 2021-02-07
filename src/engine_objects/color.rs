@@ -40,6 +40,14 @@ impl Color {
             blue: 1.0,
         };
     }
+
+    pub fn green() -> Color {
+        return Color {
+            red: 0.0,
+            green: 1.0,
+            blue: 0.0,
+        };
+    }
 }
 
 impl Add for Color {

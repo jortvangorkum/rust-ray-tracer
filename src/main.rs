@@ -10,14 +10,14 @@ const HEIGHT: usize = 900;
 fn main() {
     let mut buffer: Vec<u32> = vec![0; WIDTH * HEIGHT];
 
-    let camera: Camera = Camera {
+    let mut camera: Camera = Camera {
         origin: Vector3::new(0.0, 0.0, 0.0),
         forward: Vector3::new(0.0, 0.0, 1.0),
         up: Vector3::new(0.0, 1.0, 0.0),
         fov: 90.0,
     };
 
-    let screen: Screen = Screen::create_screen(&camera, WIDTH as u32, HEIGHT as u32);
+    let mut screen: Screen = Screen::create_screen(&camera, WIDTH as u32, HEIGHT as u32);
 
     let scene: Scene = Scene {
         primitives: vec![
@@ -34,6 +34,14 @@ fn main() {
                     origin: Vector3::new(2.0, 0.0, 4.0),
                     radius2: 3.0,
                     color: Color::blue(),
+                }
+            ),
+
+            Box::new(
+                Sphere {
+                    origin: Vector3::new(0.0, 2.0, 4.0),
+                    radius2: 3.0,
+                    color: Color::green(),
                 }
             ),
         ],
@@ -71,6 +79,9 @@ fn main() {
 
         let elapsed = now.elapsed().as_millis();
         println!("{}ms", elapsed);
+
+        camera.update_input(&window);
+        screen.update_screen(&camera);
 
         window
             .update_with_buffer(&buffer, WIDTH, HEIGHT)

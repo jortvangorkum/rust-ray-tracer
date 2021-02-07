@@ -31,4 +31,16 @@ impl Screen {
             p2: center - r * ratio - u,
         }
     }
+
+    pub fn update_screen(self: &mut Self, camera: &Camera) {
+        let pi = std::f64::consts::PI;
+        let distance = 1.0 / (camera.fov / 2.0 * pi / 180.0).tan();
+        let center: Vector3<f64> = camera.origin + distance * camera.forward; 
+        let r: Vector3<f64> = camera.up.cross(&camera.forward);
+        let u: Vector3<f64> = camera.forward.cross(&r); 
+
+        self.p0 = center - r * self.ratio + u;
+        self.p1 = center + r * self.ratio + u;
+        self.p2 = center - r * self.ratio - u;
+    }
 }
