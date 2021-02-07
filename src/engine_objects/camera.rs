@@ -30,15 +30,18 @@ impl Camera {
     }
 
     fn translate_x(self: &mut Self, dist: f64) {
-        self.origin.x += dist;
+        let right = self.up.cross(&self.forward);
+        self.origin = self.origin + right * dist;
     }
 
     fn translate_y(self: &mut Self, dist: f64) {
-        self.origin.y += dist;
+        let up = self.up;
+        self.origin = self.origin + up * dist;
     }
 
     fn translate_z(self: &mut Self, dist: f64) {
-        self.origin.z += dist;
+        let forward = self.forward;
+        self.origin = self.origin + forward * dist;
     }
 
     fn rotate_x(self: &mut Self, angle: f64) {

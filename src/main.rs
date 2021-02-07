@@ -70,25 +70,7 @@ fn main() {
         for y in 0..HEIGHT {
             for x in 0..WIDTH {
                 prim_ray.update_prim(x, y, &camera, &screen);
-                let mut color = Color::black();
-
-                let intersection = scene.get_nearest_intersection(&prim_ray);
-                if let Some((primitive, distance)) = intersection {
-                    let intersection_point: Vector3<f64> = prim_ray.get_intersection_point(distance);
-                    for light in scene.lights.iter() {
-                        let light_vector: Vector3<f64> = light.origin - intersection_point.add_scalar(-std::f64::EPSILON);
-                        let distance = light_vector.magnitude();
-                        let direction = Unit::new_normalize(light.origin - intersection_point);
-                        let origin = intersection_point + (direction.scale(std::f64::EPSILON));
-                        shadow_ray.update_shadow(origin, direction);
-
-                        if !PointLight::occluded(&scene, &shadow_ray, distance) {
-                            let normal = primitive.get_normal(intersection_point);
-                            color += primitive.get_color() * (1.0 / (distance * distance)) * light.intensity * (normal.dot(&direction));
-                        }
-                    }
-                }
-
+                let color = prim_ray.trace(&scene, &mut shadow_ray);
                 let index = x + y * WIDTH;
                 buffer[index] = color.to_u32();
             }

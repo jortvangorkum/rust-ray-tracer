@@ -19,7 +19,7 @@ impl Screen {
         let ratio = width as f64 / height as f64;
         let center: Vector3<f64> = camera.origin + distance * camera.forward; 
         let r: Vector3<f64> = camera.up.cross(&camera.forward);
-        let u: Vector3<f64> = camera.forward.cross(&r); 
+        let u: Vector3<f64> = camera.up; 
 
         Screen {
             width,
