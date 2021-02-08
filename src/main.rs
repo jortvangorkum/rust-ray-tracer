@@ -7,6 +7,7 @@ use nalgebra::Vector3;
 const WIDTH: usize = 1600;
 const HEIGHT: usize = 900;
 pub static EPSILON: f64 = 0.0001;
+pub static RECURSION_LIMIT: u32 = 16;
 
 fn main() {
     let mut buffer: Vec<u32> = vec![0; WIDTH * HEIGHT];
@@ -24,30 +25,30 @@ fn main() {
         primitives: vec![
             Box::new(
                 Sphere {
-                    origin: Vector3::new(0.0, 0.0, 10.0),
+                    origin: Vector3::new(0.0, 0.0, 5.0),
                     radius2: 3.0,
                     material_index: 0,
                 }
             ),
             Box::new(
                 Sphere {
-                    origin: Vector3::new(2.0, 0.0, 10.0),
+                    origin: Vector3::new(4.0, 0.0, 5.0),
                     radius2: 3.0,
                     material_index: 1,
                 }
             ),
             Box::new(
                 Sphere {
-                    origin: Vector3::new(0.0, 2.0, 10.0),
+                    origin: Vector3::new(0.0, 4.0, 5.0),
                     radius2: 3.0,
                     material_index: 2,
                 }
             ),
             Box::new(
                 Triangle::create_triangle(
-                    Vector3::new(0.0, -2.0, 5.0), 
-                    Vector3::new(2.0, 0.0, 5.0), 
-                    Vector3::new(0.0, 2.0, 5.0),
+                    Vector3::new(0.0, -2.0, 10.0), 
+                    Vector3::new(2.0, 0.0, 10.0), 
+                    Vector3::new(0.0, 2.0, 10.0),
                     true, 
                     2,
                 )
@@ -62,8 +63,8 @@ fn main() {
         materials: vec![
             Material {
                 diffuse_color: Color::red(),
-                refraction_index: None,
-                refraction_cof: 0.0,
+                refraction_index: Some(1.5),
+                refraction_cof: 1.0,
                 specular_cof: 0.0,
             },
             Material {
@@ -100,7 +101,7 @@ fn main() {
         for y in 0..HEIGHT {
             for x in 0..WIDTH {
                 prim_ray.update_prim(x, y, &camera, &screen);
-                let color = prim_ray.trace(&scene, &mut shadow_ray);
+                let color = prim_ray.trace(&scene, &mut shadow_ray, 0);
                 let index = x + y * WIDTH;
                 buffer[index] = color.to_u32();
             }

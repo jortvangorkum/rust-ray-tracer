@@ -1,8 +1,8 @@
-use nalgebra::{Unit, Vector3};
+use nalgebra::{Unit, Vector3, clamp};
 
-use crate::EPSILON;
+use crate::{EPSILON, RECURSION_LIMIT};
 
-use super::{Scene, Camera, Color, lights::PointLight, Screen};
+use super::{Camera, Color, Material, Scene, Screen, lights::PointLight, primitives::Primitive};
 
 pub struct Ray {
     pub origin: Vector3<f64>,
@@ -58,15 +58,74 @@ impl Ray {
         return energy;
     }
 
-    pub fn trace(self: &Self, scene: &Scene, shadow_ray: &mut Ray) -> Color {
+    fn determine_diffuse_color(scene: &Scene, shadow_ray: &mut Ray, material: &Material, intersection_point: &Vector3<f64>, normal: &Vector3<f64>) -> Color {
+        let energy = Ray::calculate_light_energy(scene, shadow_ray, &intersection_point, &normal);
+        let color = material.diffuse_color * energy;
+        return color;
+    }
+
+    fn determine_specular_color(self: &mut Self, scene: &Scene, shadow_ray: &mut Ray, intersection_point: &Vector3<f64>, normal: &Vector3<f64>, depth: &u32) -> Color {
+        let reflect_dir: Vector3<f64> = self.direction.into_inner() - normal.scale(2.0 * normal.dot(&self.direction));
+        self.origin = intersection_point + (reflect_dir.scale(EPSILON));
+        self.direction = Unit::new_normalize(reflect_dir);
+        return self.trace(scene, shadow_ray, depth + 1);
+    }
+
+    fn get_refractive_direction(self: &Self, material: &Material, normal: &Vector3<f64>) -> Option<Unit<Vector3<f64>>> {
+        let mut cosi = clamp(self.direction.dot(normal),-1.0, 1.0);
+        let mut etai = 1.0;
+        let mut etat = material.refraction_index
+            .expect("No refraction index is defined for this material");
+        let mut normal_refraction = *normal;
+
+        if cosi < 0.0 { cosi = -cosi; }
+        else {
+            normal_refraction = -normal_refraction;
+            std::mem::swap(&mut etai, &mut etat);
+        }
+
+        let eta = etai / etat;
+        let k = 1.0 - eta * eta * (1.0 - cosi * cosi);
+        
+        if k < 0.0 { return None; }
+        
+        return Some(Unit::new_normalize(self.direction.scale(eta) + (eta * cosi - k.sqrt()) * normal_refraction));
+    }
+
+    fn determine_refractive_color(self: &mut Self, scene: &Scene, shadow_ray: &mut Ray, intersection_point: &Vector3<f64>, normal: &Vector3<f64>, material: &Material, depth: &u32) -> Color {
+        let refractive_direction = self.get_refractive_direction(material, normal)
+            .expect("No refractive direction could be calculated");
+        self.origin = intersection_point + (refractive_direction.scale(EPSILON));
+        self.direction = refractive_direction;
+        return self.trace(scene, shadow_ray, depth + 1);
+    }
+
+    pub fn trace(self: &mut Self, scene: &Scene, shadow_ray: &mut Ray, depth: u32) -> Color {
+        if depth > RECURSION_LIMIT { return Color::black(); }
+
         let intersection = scene.get_nearest_intersection(self);
         
         if let Some((primitive, distance)) = intersection {
             let intersection_point: Vector3<f64> = self.get_intersection_point(distance);
             let normal = primitive.get_normal(&intersection_point);
+            let material = primitive.get_material(&scene.materials);
+            let diffuse_cof = 1.0 - material.specular_cof - material.refraction_cof;
+            let mut color = Color::black();
 
-            let energy = Ray::calculate_light_energy(scene, shadow_ray, &intersection_point, &normal);
-            let color = primitive.get_material(&scene.materials).diffuse_color * energy;
+            if diffuse_cof > EPSILON {
+                let diffuse_color = Ray::determine_diffuse_color(scene, shadow_ray, &material, &intersection_point, &normal);
+                color += diffuse_color * diffuse_cof;
+            }
+
+            if material.specular_cof > EPSILON {
+                let specular_color = self.determine_specular_color(scene, shadow_ray, &intersection_point, &normal, &depth);
+                color += specular_color * material.specular_cof;
+            }
+
+            if material.refraction_cof > EPSILON {
+                let refractive_color = self.determine_refractive_color(scene, shadow_ray, &intersection_point, &normal, &material, &depth);
+                color += refractive_color * material.refraction_cof;
+            }
 
             return color;
         }
