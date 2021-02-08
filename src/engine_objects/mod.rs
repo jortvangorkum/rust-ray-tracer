@@ -10,3 +10,5 @@ mod screen;
 pub use screen::*;
 pub mod primitives;
 pub mod lights;
+mod material;
+pub use material::*;

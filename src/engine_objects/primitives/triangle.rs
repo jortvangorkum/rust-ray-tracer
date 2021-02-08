@@ -1,6 +1,6 @@
 use nalgebra::{Unit, Vector3};
 
-use crate::{EPSILON, engine_objects::{Color, Ray}};
+use crate::{EPSILON, engine_objects::{Material, Ray}};
 
 use super::Primitive;
 
@@ -11,11 +11,11 @@ pub struct Triangle {
     pub v0v1: Vector3<f64>,
     pub v0v2: Vector3<f64>,
     pub flip_normal: bool,
-    pub color: Color,
+    pub material_index: usize,
 }
 
 impl Triangle {
-    pub fn create_triangle(v0: Vector3<f64>, v1: Vector3<f64>, v2: Vector3<f64>, flip_normal: bool, color: Color) -> Triangle {
+    pub fn create_triangle(v0: Vector3<f64>, v1: Vector3<f64>, v2: Vector3<f64>, flip_normal: bool, material_index: usize) -> Triangle {
         return Triangle {
             v0,
             v1,
@@ -23,15 +23,14 @@ impl Triangle {
             v0v1: v1 - v0,
             v0v2: v2 - v0,
             flip_normal,
-            color,
+            material_index,
         }
     }
 }
 
 impl Primitive for Triangle {
-
-    fn get_color(&self) -> Color {
-        return self.color;
+    fn get_material(&self, materials: &Vec<Material>) -> Material {
+        return materials[self.material_index];
     }
 
     fn get_normal(&self, _intersection_point: &Vector3<f64>) -> Unit<Vector3<f64>> {

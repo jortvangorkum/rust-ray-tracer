@@ -1,5 +1,5 @@
 mod engine_objects;
-use engine_objects::{Camera, Color, Ray, Scene, Screen, lights::PointLight, primitives::{Sphere, Triangle}};
+use engine_objects::{Camera, Color, Material, Ray, Scene, Screen, lights::PointLight, primitives::{Sphere, Triangle}};
 
 use minifb::{Key, Window, WindowOptions};
 use nalgebra::Vector3;
@@ -21,32 +21,26 @@ fn main() {
     let mut screen: Screen = Screen::create_screen(&camera, WIDTH as u32, HEIGHT as u32);
 
     let scene: Scene = Scene {
-        lights: vec![
-            PointLight {
-                origin: Vector3::new(0.0, 0.0, 0.0),
-                intensity: 30.0,
-            },
-        ],
         primitives: vec![
             Box::new(
                 Sphere {
                     origin: Vector3::new(0.0, 0.0, 10.0),
                     radius2: 3.0,
-                    color: Color::red(),
+                    material_index: 0,
                 }
             ),
             Box::new(
                 Sphere {
                     origin: Vector3::new(2.0, 0.0, 10.0),
                     radius2: 3.0,
-                    color: Color::blue(),
+                    material_index: 1,
                 }
             ),
             Box::new(
                 Sphere {
                     origin: Vector3::new(0.0, 2.0, 10.0),
                     radius2: 3.0,
-                    color: Color::green(),
+                    material_index: 2,
                 }
             ),
             Box::new(
@@ -55,10 +49,36 @@ fn main() {
                     Vector3::new(2.0, 0.0, 5.0), 
                     Vector3::new(0.0, 2.0, 5.0),
                     true, 
-                    Color::green(),
+                    2,
                 )
             )
         ],
+        lights: vec![
+            PointLight {
+                origin: Vector3::new(0.0, 0.0, 0.0),
+                intensity: 30.0,
+            },
+        ],
+        materials: vec![
+            Material {
+                diffuse_color: Color::red(),
+                refraction_index: None,
+                refraction_cof: 0.0,
+                specular_cof: 0.0,
+            },
+            Material {
+                diffuse_color: Color::green(),
+                refraction_index: None,
+                refraction_cof: 0.0,
+                specular_cof: 0.0,
+            },
+            Material {
+                diffuse_color: Color::blue(),
+                refraction_index: None,
+                refraction_cof: 0.0,
+                specular_cof: 0.0,
+            },
+        ]
     };
 
     let mut prim_ray = Ray::init();

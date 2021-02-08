@@ -1,13 +1,13 @@
 use nalgebra::{Unit, Vector3};
 
-use crate::engine_objects::{color::Color, ray::Ray};
+use crate::engine_objects::{Material, Ray};
 
 use super::primitive::Primitive;
 
 pub struct Sphere {
     pub origin: Vector3<f64>,
     pub radius2: f64,
-    pub color: Color,
+    pub material_index: usize,
 }
 
 impl Primitive for Sphere {
@@ -37,8 +37,8 @@ impl Primitive for Sphere {
         return Some(t0);
     }
 
-    fn get_color(&self) -> Color {
-        return self.color;
+    fn get_material(&self, materials: &Vec<Material>) -> Material {
+        return materials[self.material_index];
     }
 
     fn get_normal(&self, intersection_point: &Vector3<f64>) -> Unit<Vector3<f64>> {
