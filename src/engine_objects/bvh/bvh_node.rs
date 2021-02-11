@@ -54,6 +54,35 @@ impl BVHNode {
         return best_bin_index;
     }
     
+    fn update_triangles_nodes(self: &mut Self, bvh: &mut BVH, scene: &Vec<Box<dyn Primitive>>, triangle_indices: &Vec<usize>, bin_index: usize, l_axis: usize, k1: f64, cbmin: f64) {
+        // Quicksort triangle indices
+        let j = self.first;
+        for i in self.first..(self.first + self.count) {
+            let primitive = scene[triangle_indices[i]];
+            let ci = primitive.get_centroid()[l_axis];
+            let bin_id = (k1 * (ci - cbmin)) as usize;
+
+            if bin_id <= bin_index {
+                let tmp = triangle_indices[i];
+                triangle_indices[i] = triangle_indices[j];
+                triangle_indices[j] = tmp; 
+            }
+        }
+
+        let bin_left = &bvh.bins_left[bin_index];
+        let bin_right = &bvh.bins_right[bin_index];
+
+        let left_node = &mut bvh.pool[self.left];
+        let right_node = &mut bvh.pool[self.left + 1];
+
+        left_node.first = self.first;
+        left_node.count = j - self.first;
+        right_node.first = j;
+        right_node.count = self.count - left_node.count;
+
+        left_node.bounds = bin_left.bounds;
+        right_node.bounds = bin_right.bounds;
+    }
 
     fn partition_triangles(self: &mut Self, bvh: &mut BVH, scene: &Vec<Box<dyn Primitive>>, pool: &Vec<BVHNode>, triangle_indices: &Vec<usize>) -> bool {
         let centroid_bounding_box = AABB::new();
@@ -117,33 +146,7 @@ impl BVHNode {
 
         let Some(bin_index) = best_bin_index;
 
-        // Quicksort triangle indices
-        let j = self.first;
-        for i in self.first..(self.first + self.count) {
-            let primitive = scene[triangle_indices[i]];
-            let ci = primitive.get_centroid()[l_axis];
-            let bin_id = (k1 * (ci - cbmin)) as usize;
-
-            if bin_id <= bin_index {
-                let tmp = triangle_indices[i];
-                triangle_indices[i] = triangle_indices[j];
-                triangle_indices[j] = tmp; 
-            }
-        }
-
-        let bin_left = &bvh.bins_left[bin_index];
-        let bin_right = &bvh.bins_right[bin_index];
-
-        let left_node = &mut bvh.pool[self.left];
-        let right_node = &mut bvh.pool[self.left + 1];
-
-        left_node.first = self.first;
-        left_node.count = j - self.first;
-        right_node.first = j;
-        right_node.count = self.count - left_node.count;
-
-        left_node.bounds = bin_left.bounds;
-        right_node.bounds = bin_right.bounds;
+        self.update_triangles_nodes(bvh, scene, triangle_indices, bin_index, l_axis, k1, cbmin);
 
         return true;
     }
