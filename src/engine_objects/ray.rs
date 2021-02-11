@@ -10,7 +10,7 @@ pub struct Ray {
 }
 
 impl Ray {
-    pub fn init() -> Ray {
+    pub fn new() -> Ray {
         return Ray {
             origin: Vector3::zeros(),
             direction: Unit::new_normalize(Vector3::zeros()),

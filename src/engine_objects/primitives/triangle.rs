@@ -1,6 +1,6 @@
 use nalgebra::{Unit, Vector3};
 
-use crate::{EPSILON, engine_objects::{Material, Ray}};
+use crate::{EPSILON, engine_objects::{Material, Ray, bvh::AABB}};
 
 use super::Primitive;
 
@@ -10,18 +10,28 @@ pub struct Triangle {
     pub v2: Vector3<f64>,
     pub v0v1: Vector3<f64>,
     pub v0v2: Vector3<f64>,
+    pub centroid: Vector3<f64>,
+    pub bounds: AABB,
     pub flip_normal: bool,
     pub material_index: usize,
 }
 
 impl Triangle {
     pub fn create_triangle(v0: Vector3<f64>, v1: Vector3<f64>, v2: Vector3<f64>, flip_normal: bool, material_index: usize) -> Triangle {
+        let bounds = AABB::new();
+        bounds.grow_by_point(&v0);
+        bounds.grow_by_point(&v1);
+        bounds.grow_by_point(&v2);
+
+
         return Triangle {
             v0,
             v1,
             v2,
             v0v1: v1 - v0,
             v0v2: v2 - v0,
+            centroid: (v0 + v1 + v2) / 3.0,
+            bounds,
             flip_normal,
             material_index,
         }
@@ -29,6 +39,14 @@ impl Triangle {
 }
 
 impl Primitive for Triangle {
+    fn get_bounds(self: &Self) -> AABB {
+        return self.bounds;
+    }
+
+    fn get_centroid(self: &Self) -> Vector3<f64> {
+        return self.centroid;
+    }
+
     fn get_material(&self, materials: &Vec<Material>) -> Material {
         return materials[self.material_index];
     }

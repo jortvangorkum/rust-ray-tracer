@@ -13,7 +13,7 @@ pub struct Screen {
 }
 
 impl Screen {
-    pub fn create_screen(camera: &Camera, width: u32, height: u32) -> Screen {
+    pub fn new(camera: &Camera, width: u32, height: u32) -> Screen {
         let pi = std::f64::consts::PI;
         let distance = 1.0 / (camera.fov / 2.0 * pi / 180.0).tan();
         let ratio = width as f64 / height as f64;

@@ -19,7 +19,7 @@ fn main() {
         fov: 90.0,
     };
 
-    let mut screen: Screen = Screen::create_screen(&camera, WIDTH as u32, HEIGHT as u32);
+    let mut screen: Screen = Screen::new(&camera, WIDTH as u32, HEIGHT as u32);
 
     let scene: Scene = Scene {
         primitives: vec![
@@ -64,8 +64,8 @@ fn main() {
             Material {
                 diffuse_color: Color::red(),
                 refraction_index: Some(1.5),
-                refraction_cof: 1.0,
-                specular_cof: 0.0,
+                refraction_cof: 0.0,
+                specular_cof: 0.2,
             },
             Material {
                 diffuse_color: Color::green(),
@@ -82,8 +82,8 @@ fn main() {
         ]
     };
 
-    let mut prim_ray = Ray::init();
-    let mut shadow_ray = Ray::init();
+    let mut prim_ray = Ray::new();
+    let mut shadow_ray = Ray::new();
 
     let mut window = Window::new(
         "Rust Ray Tracer - Jort van Gorkum",
@@ -96,19 +96,18 @@ fn main() {
     window.limit_update_rate(Some(std::time::Duration::from_micros(16600)));
 
     while window.is_open() && !window.is_key_down(Key::Escape) {
-        let now = std::time::Instant::now();
-
-        for y in 0..HEIGHT {
-            for x in 0..WIDTH {
-                prim_ray.update_prim(x, y, &camera, &screen);
-                let color = prim_ray.trace(&scene, &mut shadow_ray, 0);
-                let index = x + y * WIDTH;
-                buffer[index] = color.to_u32();
+        profile!(
+            "Rendering" {
+                for y in 0..HEIGHT {
+                    for x in 0..WIDTH {
+                        prim_ray.update_prim(x, y, &camera, &screen);
+                        let color = prim_ray.trace(&scene, &mut shadow_ray, 0);
+                        let index = x + y * WIDTH;
+                        buffer[index] = color.to_u32();
+                    }
+                }
             }
-        }
-
-        let elapsed = now.elapsed().as_millis();
-        println!("{}ms", elapsed);
+        );
 
         camera.update_input(&window);
         screen.update_screen(&camera);

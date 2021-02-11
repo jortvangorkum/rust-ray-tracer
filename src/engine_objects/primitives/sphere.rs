@@ -1,6 +1,6 @@
 use nalgebra::{Unit, Vector3};
 
-use crate::engine_objects::{Material, Ray};
+use crate::engine_objects::{Material, Ray, bvh::AABB};
 
 use super::primitive::Primitive;
 
@@ -43,5 +43,19 @@ impl Primitive for Sphere {
 
     fn get_normal(&self, intersection_point: &Vector3<f64>) -> Unit<Vector3<f64>> {
         return Unit::new_normalize(intersection_point - self.origin);
+    }
+
+    fn get_centroid(self: &Self) -> Vector3<f64> {
+        return self.origin;
+    }
+
+    fn get_bounds(self: &Self) -> AABB {
+        let r = self.radius2.sqrt();
+        let bmin = Vector3::new(self.origin.x - r, self.origin.y - r, self.origin.z - r);
+        let bmax = Vector3::new(self.origin.x + r, self.origin.y + r, self.origin.z + r);
+        return AABB {
+            bmin,
+            bmax,
+        };
     }
 }
