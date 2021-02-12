@@ -1,6 +1,6 @@
 use nalgebra::Vector3;
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Default)]
 pub struct AABB {
     pub bmin: Vector3<f64>,
     pub bmax: Vector3<f64>,
@@ -47,7 +47,7 @@ impl AABB {
         let dy = self.bmax.y - self.bmin.y;
         let dz = self.bmax.z - self.bmin.z;
 
-        let l_axis = 0;
+        let mut l_axis = 0;
         if dy > dx { l_axis = 1; }
         if dz > dy && dz > dx { l_axis = 2; }
         

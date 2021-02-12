@@ -1,6 +1,6 @@
 use super::AABB;
 
-
+#[derive(Clone, Copy, Default)]
 pub struct Bin {
     pub count: u32,
     pub bounds: AABB,   

@@ -18,7 +18,7 @@ pub struct Triangle {
 
 impl Triangle {
     pub fn create_triangle(v0: Vector3<f64>, v1: Vector3<f64>, v2: Vector3<f64>, flip_normal: bool, material_index: usize) -> Triangle {
-        let bounds = AABB::new();
+        let mut bounds = AABB::new();
         bounds.grow_by_point(&v0);
         bounds.grow_by_point(&v1);
         bounds.grow_by_point(&v2);

@@ -1,13 +1,14 @@
-use super::{Material, lights::PointLight, primitives::Primitive, ray::Ray};
+use super::{Material, bvh::BVH, lights::PointLight, primitives::Primitive, ray::Ray};
 
 pub struct Scene {
+    pub bvh: BVH,
     pub primitives: Vec<Box<dyn Primitive>>,
     pub lights: Vec<PointLight>,
     pub materials: Vec<Material>,
 }
 
 impl Scene {
-    pub fn get_nearest_intersection(&self, ray: &Ray) -> Option<(&Box<dyn Primitive>, f64)> {
+    pub fn _get_nearest_intersection(&self, ray: &Ray) -> Option<(&Box<dyn Primitive>, f64)> {
         let mut nearest_intersection: Option<(&Box<dyn Primitive>, f64)> = None;
         
         for primitive in &self.primitives {

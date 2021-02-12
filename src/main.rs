@@ -1,5 +1,5 @@
 mod engine_objects;
-use engine_objects::{Camera, Color, Material, Ray, Scene, Screen, lights::PointLight, primitives::{Sphere, Triangle}};
+use engine_objects::{Camera, Color, Material, Ray, Scene, Screen, bvh::BVH, lights::PointLight, primitives::{Primitive, Sphere, Triangle}};
 
 use minifb::{Key, Window, WindowOptions};
 use nalgebra::Vector3;
@@ -21,39 +21,45 @@ fn main() {
 
     let mut screen: Screen = Screen::new(&camera, WIDTH as u32, HEIGHT as u32);
 
-    let scene: Scene = Scene {
-        primitives: vec![
-            Box::new(
-                Sphere {
-                    origin: Vector3::new(0.0, 0.0, 5.0),
-                    radius2: 3.0,
-                    material_index: 0,
-                }
-            ),
-            Box::new(
-                Sphere {
-                    origin: Vector3::new(4.0, 0.0, 5.0),
-                    radius2: 3.0,
-                    material_index: 1,
-                }
-            ),
-            Box::new(
-                Sphere {
-                    origin: Vector3::new(0.0, 4.0, 5.0),
-                    radius2: 3.0,
-                    material_index: 2,
-                }
-            ),
-            Box::new(
-                Triangle::create_triangle(
-                    Vector3::new(0.0, -2.0, 10.0), 
-                    Vector3::new(2.0, 0.0, 10.0), 
-                    Vector3::new(0.0, 2.0, 10.0),
-                    true, 
-                    2,
-                )
+    let primitives: Vec<Box<dyn Primitive>> = vec![
+        Box::new(
+            Sphere {
+                origin: Vector3::new(0.0, 0.0, 5.0),
+                radius2: 3.0,
+                material_index: 0,
+            }
+        ),
+        Box::new(
+            Sphere {
+                origin: Vector3::new(4.0, 0.0, 5.0),
+                radius2: 3.0,
+                material_index: 1,
+            }
+        ),
+        Box::new(
+            Sphere {
+                origin: Vector3::new(0.0, 4.0, 5.0),
+                radius2: 3.0,
+                material_index: 2,
+            }
+        ),
+        Box::new(
+            Triangle::create_triangle(
+                Vector3::new(0.0, -2.0, 10.0), 
+                Vector3::new(2.0, 0.0, 10.0), 
+                Vector3::new(0.0, 2.0, 10.0),
+                true, 
+                2,
             )
-        ],
+        )
+    ];
+
+    let mut bvh = BVH::new(0, primitives.len());
+    bvh.build(&primitives);
+
+    let scene: Scene = Scene {
+        bvh,
+        primitives,
         lights: vec![
             PointLight {
                 origin: Vector3::new(0.0, 0.0, 0.0),

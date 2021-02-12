@@ -1,5 +1,3 @@
-use nalgebra::Vector3;
-
 #[macro_export]
 macro_rules! profile {
     ($name:tt $execution:expr) => {

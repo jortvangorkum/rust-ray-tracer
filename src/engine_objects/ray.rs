@@ -2,7 +2,7 @@ use nalgebra::{Unit, Vector3, clamp};
 
 use crate::{EPSILON, RECURSION_LIMIT};
 
-use super::{Camera, Color, Material, Scene, Screen, lights::PointLight, primitives::Primitive};
+use super::{Camera, Color, Material, Scene, Screen, bvh::AABB, lights::PointLight};
 
 pub struct Ray {
     pub origin: Vector3<f64>,
@@ -15,6 +15,22 @@ impl Ray {
             origin: Vector3::zeros(),
             direction: Unit::new_normalize(Vector3::zeros()),
         };
+    }
+
+    pub fn intersect_bounds(self: &Self, bounds: &AABB) -> Option<f64> {
+        let inv_dir: Vector3<f64> = self.direction.apply_into(|x| 1.0 / x);
+
+        let t1: Vector3<f64> = inv_dir.component_mul(&(bounds.bmin - self.origin));
+        let t2: Vector3<f64> = inv_dir.component_mul(&(bounds.bmax - self.origin));
+
+        let tmin = Vector3::new(t1.x.min(t2.x), t1.y.min(t2.y), t1.z.min(t2.z));
+        let tmax = Vector3::new(t1.x.max(t2.x), t1.y.max(t2.y), t1.z.max(t2.z));
+
+        let dmin = tmin.x.max(tmin.y.max(tmin.z));
+        let dmax = tmax.x.min(tmax.y.min(tmax.z));
+
+        if dmax < 0.0 || dmin > dmax { return None; }
+        return Some(dmin);
     }
 
     pub fn get_intersection_point(self: &Self, dist: f64) -> Vector3<f64> {
@@ -103,9 +119,10 @@ impl Ray {
     pub fn trace(self: &mut Self, scene: &Scene, shadow_ray: &mut Ray, depth: u32) -> Color {
         if depth > RECURSION_LIMIT { return Color::black(); }
 
-        let intersection = scene.get_nearest_intersection(self);
+        let intersection = scene.bvh.pool[0].traverse(self, &scene.bvh, &scene.primitives);
         
-        if let Some((primitive, distance)) = intersection {
+        if let Some((primitive_index, distance)) = intersection {
+            let primitive = &scene.primitives[primitive_index];
             let intersection_point: Vector3<f64> = self.get_intersection_point(distance);
             let normal = primitive.get_normal(&intersection_point);
             let material = primitive.get_material(&scene.materials);
